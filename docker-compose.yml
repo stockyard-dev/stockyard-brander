@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  brander:
+    build: .
+    ports:
+      - "9180:9180"
+    environment:
+      - PORT=9180
+      - DATA_DIR=/data
+      - BRANDER_LICENSE_KEY=
+    volumes:
+      - brander_data:/data
+    restart: unless-stopped
+volumes:
+  brander_data:
