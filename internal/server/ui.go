@@ -1,120 +1,35 @@
 package server
 
 var dashboardHTML = []byte(`<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stockyard Brander</title>
-<style>
-  :root {
-    --bg: #1a1410;
-    --surface: #241c15;
-    --border: #3d2e1e;
-    --rust: #c4622d;
-    --leather: #8b5e3c;
-    --cream: #f5e6c8;
-    --muted: #7a6550;
-    --text: #e8d5b0;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace, sans-serif; min-height: 100vh; }
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
-  .logo { color: var(--rust); font-size: 1.25rem; font-weight: 700; letter-spacing: 0.05em; }
-  .badge { background: var(--rust); color: var(--cream); font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
-  main { max-width: 960px; margin: 2rem auto; padding: 0 2rem; }
-  .hero { text-align: center; padding: 3rem 0 2rem; }
-  .hero h1 { font-size: 2rem; color: var(--cream); margin-bottom: 0.5rem; }
-  .hero p { color: var(--muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; text-align: center; }
-  .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--rust); }
-  .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; margin-bottom: 1rem; }
-  .card h2 { font-size: 1rem; color: var(--cream); margin-bottom: 1rem; }
-  .tier-box { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .tier { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; }
-  .tier.pro { border-color: var(--rust); }
-  .tier-name { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.5rem; }
-  .tier.pro .tier-name { color: var(--rust); }
-  .tier-desc { font-size: 0.85rem; color: var(--text); }
-  .tier-price { font-size: 0.8rem; color: var(--leather); margin-top: 0.5rem; }
-  footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.75rem; }
-  footer a { color: var(--leather); text-decoration: none; }
-  .endpoint-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-  .endpoint-table th { text-align: left; color: var(--muted); padding: 0.5rem; border-bottom: 1px solid var(--border); }
-  .endpoint-table td { padding: 0.5rem; border-bottom: 1px solid var(--border); color: var(--text); }
-  .method { color: var(--rust); font-weight: 600; }
-</style>
-</head>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Stockyard Brander</title><style>:root{--bg:#1a1410;--surface:#241c15;--border:#3d2e1e;--rust:#c4622d;--leather:#8b5e3c;--cream:#f5e6c8;--muted:#7a6550;--text:#e8d5b0}*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace,sans-serif}header{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}.logo{color:var(--rust);font-size:1.25rem;font-weight:700}.badge{background:var(--rust);color:var(--cream);font-size:0.65rem;padding:0.2rem 0.5rem;border-radius:3px;font-weight:600;text-transform:uppercase}main{max-width:1100px;margin:0 auto;padding:2rem}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}.stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.25rem;text-align:center}.stat-value{font-size:1.75rem;font-weight:700;color:var(--rust)}.stat-label{font-size:0.75rem;color:var(--muted);margin-top:0.25rem;text-transform:uppercase;letter-spacing:0.05em}.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}.card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem}.card h2{font-size:0.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem}.full{grid-column:1/-1}.form-row{display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap}select,input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:0.5rem 0.75rem;border-radius:4px;font-family:inherit;font-size:0.85rem;flex:1}.btn{background:var(--rust);color:var(--cream);border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:600}.btn:hover{opacity:0.85}.btn-sm{padding:0.25rem 0.6rem;font-size:0.75rem}.btn-danger{background:#7a2020}.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}.asset-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1rem;text-align:center}.asset-preview{height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;font-size:2rem}.asset-name{font-size:0.8rem;color:var(--cream);margin-bottom:0.25rem;font-weight:600}.asset-meta{font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem}.empty{color:var(--muted);font-size:0.85rem;padding:1rem 0;text-align:center}.tabs{display:flex;gap:0.5rem;margin-bottom:1.5rem}.tab{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:0.5rem 1rem;border-radius:4px;cursor:pointer;font-size:0.85rem;font-family:inherit}.tab.active{background:var(--rust);color:var(--cream);border-color:var(--rust)}</style></head>
 <body>
-<header>
-  <span class="logo">⬡ Stockyard</span>
-  <span style="color:var(--muted);">/</span>
-  <span style="color:var(--cream);font-weight:600;">Brander</span>
-  <span class="badge">v0.1.0</span>
-</header>
+<header><span class="logo">&#x2B21; Stockyard</span><span style="color:var(--muted)">/</span><span style="color:var(--cream);font-weight:600">Brander</span><span class="badge">Brand Assets</span></header>
 <main>
-  <div class="hero">
-    <h1>Brander</h1>
-    <p>Email signature manager — define a template once, everyone gets the same footer</p>
-  </div>
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-value" id="stat-items">—</div>
-      <div class="stat-label">Total Items</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">9180</div>
-      <div class="stat-label">Port</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" id="stat-tier">—</div>
-      <div class="stat-label">Tier</div>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Tier &amp; Limits</h2>
-    <div class="tier-box">
-      <div class="tier">
-        <div class="tier-name">Free</div>
-        <div class="tier-desc">1 template, 10 members</div>
-        <div class="tier-price">$0/mo</div>
-      </div>
-      <div class="tier pro">
-        <div class="tier-name">Pro</div>
-        <div class="tier-desc">Unlimited templates and members</div>
-        <div class="tier-price">$1.99/mo</div>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <h2>API Endpoints</h2>
-    <table class="endpoint-table">
-      <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td class="method">GET</td><td>/health</td><td>Health check</td></tr>
-        <tr><td class="method">GET</td><td>/api/version</td><td>Version info</td></tr>
-        <tr><td class="method">GET</td><td>/api/limits</td><td>Current tier limits</td></tr>
-        <tr><td class="method">GET</td><td>/api/items</td><td>List items</td></tr>
-        <tr><td class="method">POST</td><td>/api/items</td><td>Create item</td></tr>
-        <tr><td class="method">GET</td><td>/api/items/{id}</td><td>Get item</td></tr>
-        <tr><td class="method">PUT</td><td>/api/items/{id}</td><td>Update item</td></tr>
-        <tr><td class="method">DELETE</td><td>/api/items/{id}</td><td>Delete item</td></tr>
-      </tbody>
-    </table>
-  </div>
+<div class="stats"><div class="stat"><div class="stat-value" id="s1">0</div><div class="stat-label">Assets</div></div><div class="stat"><div class="stat-value" id="s2">0</div><div class="stat-label">Downloads</div></div><div class="stat"><div class="stat-value" id="s3">FREE</div><div class="stat-label">Tier</div></div></div>
+<div class="grid">
+<div class="card"><h2>Add Collection</h2>
+<div class="form-row"><input id="f-cname" placeholder="Collection name"></div>
+<button class="btn btn-sm" onclick="addCollection()">Create</button>
+<div id="col-list" style="margin-top:1rem"><div class="empty">No collections</div></div></div>
+<div class="card"><h2>Add Asset</h2>
+<div class="form-row"><input id="f-aname" placeholder="Asset name"><select id="f-atype"><option>logo</option><option>icon</option><option>banner</option><option>color</option><option>font</option><option>other</option></select></div>
+<div class="form-row"><input id="f-aurl" placeholder="URL or file path"><input id="f-afmt" placeholder="Format (svg, png, ttf...)"></div>
+<div class="form-row"><select id="f-acol"><option value="">-- Collection --</option></select><input id="f-atags" placeholder="Tags"></div>
+<button class="btn" onclick="addAsset()">Add Asset</button></div>
+</div>
+<div class="card full"><h2>Assets</h2>
+<div class="form-row" style="margin-bottom:1rem"><select id="filter-col" onchange="loadAssets()"><option value="">All Collections</option></select></div>
+<div id="asset-grid" class="asset-grid"><div class="empty">No assets yet</div></div>
+</div>
 </main>
-<footer>
-  <a href="https://stockyard.dev">stockyard.dev</a> &mdash; Operations & Teams &mdash; Apache 2.0
-</footer>
 <script>
-fetch('/api/limits').then(r=>r.json()).then(d=>{
-  document.getElementById('stat-tier').textContent = d.tier.toUpperCase();
-});
-fetch('/api/items').then(r=>r.json()).then(d=>{
-  document.getElementById('stat-items').textContent = Array.isArray(d) ? d.length : '0';
-});
-</script>
-</body>
-</html>`)
+var cols=[];
+function load(){fetch('/api/stats').then(function(r){return r.json()}).then(function(d){document.getElementById('s1').textContent=d.assets||0;document.getElementById('s2').textContent=d.downloads||0})}
+function loadCols(){fetch('/api/collections').then(function(r){return r.json()}).then(function(list){cols=list;var s1=document.getElementById('f-acol');s1.innerHTML='<option value="">-- Collection --</option>';var s2=document.getElementById('filter-col');s2.innerHTML='<option value="">All Collections</option>';list.forEach(function(c){s1.innerHTML+='<option value="'+c.id+'">'+c.name+'</option>';s2.innerHTML+='<option value="'+c.id+'">'+c.name+' ('+c.asset_count+')</option>'});var el=document.getElementById('col-list');el.innerHTML=list.length?list.map(function(c){return'<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid var(--border)"><span style="color:var(--cream)">'+c.name+'</span><span style="color:var(--muted);font-size:0.75rem">'+c.asset_count+' assets &nbsp;<button class="btn btn-sm btn-danger" onclick="delCol('+c.id+')">x</button></span></div>'}).join(''):'<div class="empty">No collections</div>'})}
+function loadAssets(){var cid=document.getElementById('filter-col').value;fetch('/api/assets'+(cid?'?collection_id='+cid:'')).then(function(r){return r.json()}).then(function(list){var el=document.getElementById('asset-grid');var typeIcon={logo:'&#x1F4DD;',icon:'&#x2605;',banner:'&#x1F3F3;',color:'&#x1F7E5;',font:'&#x1F524;',other:'&#x1F4E6;'};el.innerHTML=list.length?list.map(function(a){return'<div class="asset-card"><div class="asset-preview">'+(typeIcon[a.asset_type]||'&#x1F4E6;')+'</div><div class="asset-name">'+a.name+'</div><div class="asset-meta">'+a.asset_type+' &bull; '+a.format+(a.collection_name?' &bull; '+a.collection_name:'')+'</div><div class="asset-meta">&#x2B07; '+a.downloads+'</div><div style="display:flex;gap:0.25rem;justify-content:center"><a href="/download/'+a.id+'" class="btn btn-sm">Download</a><button class="btn btn-sm btn-danger" onclick="delAsset('+a.id+')">x</button></div></div>'}).join(''):'<div class="empty">No assets yet. Add your logos, icons, and brand files above.</div>'})}
+function addCollection(){var n=document.getElementById('f-cname').value.trim();if(!n)return;fetch('/api/collections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n})}).then(function(){document.getElementById('f-cname').value='';loadCols();load()})}
+function delCol(id){fetch('/api/collections/'+id,{method:'DELETE'}).then(function(){loadCols();loadAssets();load()})}
+function addAsset(){var d={name:document.getElementById('f-aname').value.trim(),asset_type:document.getElementById('f-atype').value,url:document.getElementById('f-aurl').value.trim(),format:document.getElementById('f-afmt').value.trim()||'svg',collection_id:parseInt(document.getElementById('f-acol').value)||0,tags:document.getElementById('f-atags').value.trim()};if(!d.name||!d.url)return;fetch('/api/assets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(function(){loadAssets();load()})}
+function delAsset(id){fetch('/api/assets/'+id,{method:'DELETE'}).then(function(){loadAssets();load()})}
+load();loadCols();loadAssets();
+</script></body></html>`)

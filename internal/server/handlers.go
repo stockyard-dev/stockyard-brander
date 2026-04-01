@@ -1,60 +1,10 @@
 package server
-
-import (
-	"encoding/json"
-	"net/http"
-	"strconv"
-)
-
-type Item struct {
-	ID        int64  `json:"id"`
-	Name      string `json:"name"`
-	CreatedAt string `json:"created_at"`
-}
-
-func (s *Server) handleListItems(w http.ResponseWriter, r *http.Request) {
-	// List items — tool-specific query would go here
-	writeJSON(w, http.StatusOK, []Item{})
-}
-
-func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Name string `json:"name"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request")
-		return
-	}
-	if req.Name == "" {
-		writeError(w, http.StatusBadRequest, "name required")
-		return
-	}
-	writeJSON(w, http.StatusCreated, map[string]string{"status": "created", "name": req.Name})
-}
-
-func (s *Server) handleGetItem(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid id")
-		return
-	}
-	writeJSON(w, http.StatusOK, Item{ID: id})
-}
-
-func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
-}
-
-func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
-}
-
-func (s *Server) handleUI(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	w.Header().Set("Content-Type", "text/html")
-	w.Write(dashboardHTML)
-}
+import("encoding/json";"net/http";"strconv";"github.com/stockyard-dev/stockyard-brander/internal/store")
+func(s *Server)handleListCollections(w http.ResponseWriter,r *http.Request){list,_:=s.db.ListCollections();if list==nil{list=[]store.Collection{}};writeJSON(w,200,list)}
+func(s *Server)handleCreateCollection(w http.ResponseWriter,r *http.Request){var c store.Collection;json.NewDecoder(r.Body).Decode(&c);if c.Name==""{writeError(w,400,"name required");return};if err:=s.db.CreateCollection(&c);err!=nil{writeError(w,500,err.Error());return};writeJSON(w,201,c)}
+func(s *Server)handleDeleteCollection(w http.ResponseWriter,r *http.Request){id,_:=strconv.ParseInt(r.PathValue("id"),10,64);s.db.DeleteCollection(id);writeJSON(w,200,map[string]string{"status":"deleted"})}
+func(s *Server)handleListAssets(w http.ResponseWriter,r *http.Request){cid,_:=strconv.ParseInt(r.URL.Query().Get("collection_id"),10,64);list,_:=s.db.ListAssets(cid);if list==nil{list=[]store.Asset{}};writeJSON(w,200,list)}
+func(s *Server)handleCreateAsset(w http.ResponseWriter,r *http.Request){var a store.Asset;json.NewDecoder(r.Body).Decode(&a);if a.Name==""||a.URL==""{writeError(w,400,"name and url required");return};if a.AssetType==""{a.AssetType="logo"};if a.Format==""{a.Format="svg"};if err:=s.db.CreateAsset(&a);err!=nil{writeError(w,500,err.Error());return};writeJSON(w,201,a)}
+func(s *Server)handleDeleteAsset(w http.ResponseWriter,r *http.Request){id,_:=strconv.ParseInt(r.PathValue("id"),10,64);s.db.DeleteAsset(id);writeJSON(w,200,map[string]string{"status":"deleted"})}
+func(s *Server)handleDownload(w http.ResponseWriter,r *http.Request){id,_:=strconv.ParseInt(r.PathValue("id"),10,64);s.db.IncrementDownload(id);assets,_:=s.db.ListAssets(0);for _,a:=range assets{if a.ID==id{http.Redirect(w,r,a.URL,302);return}};writeError(w,404,"not found")}
+func(s *Server)handleStats(w http.ResponseWriter,r *http.Request){n,_:=s.db.CountAssets();d,_:=s.db.SumDownloads();writeJSON(w,200,map[string]interface{}{"assets":n,"downloads":d})}

@@ -1,50 +1,16 @@
 package store
-
-import (
-	"database/sql"
-	"fmt"
-	"os"
-	"path/filepath"
-
-	_ "modernc.org/sqlite"
-)
-
-type DB struct {
-	*sql.DB
-}
-
-func Open(dataDir string) (*DB, error) {
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		return nil, fmt.Errorf("mkdir: %w", err)
-	}
-	dsn := filepath.Join(dataDir, "brander.db") + "?_journal_mode=WAL&_busy_timeout=5000"
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("open: %w", err)
-	}
-	db.SetMaxOpenConns(1)
-	if err := migrate(db); err != nil {
-		return nil, fmt.Errorf("migrate: %w", err)
-	}
-	return &DB{db}, nil
-}
-
-func migrate(db *sql.DB) error {
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS templates (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        html TEXT NOT NULL,
-        is_default INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-     );
-     CREATE TABLE IF NOT EXISTS team_members (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        title TEXT,
-        phone TEXT,
-        template_id INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-     );`)
-	return err
-}
+import("database/sql";"fmt";"os";"path/filepath";"time";_ "modernc.org/sqlite")
+type DB struct{*sql.DB}
+type Collection struct{ID int64 `json:"id"`;Name string `json:"name"`;Description string `json:"description"`;AssetCount int `json:"asset_count,omitempty"`;CreatedAt time.Time `json:"created_at"`}
+type Asset struct{ID int64 `json:"id"`;CollectionID int64 `json:"collection_id"`;CollectionName string `json:"collection_name,omitempty"`;Name string `json:"name"`;AssetType string `json:"asset_type"`;Format string `json:"format"`;URL string `json:"url"`;Tags string `json:"tags"`;Downloads int `json:"downloads"`;CreatedAt time.Time `json:"created_at"`}
+func Open(dataDir string)(*DB,error){if err:=os.MkdirAll(dataDir,0755);err!=nil{return nil,fmt.Errorf("mkdir: %w",err)};dsn:=filepath.Join(dataDir,"brander.db")+"?_journal_mode=WAL&_busy_timeout=5000";db,err:=sql.Open("sqlite",dsn);if err!=nil{return nil,fmt.Errorf("open: %w",err)};db.SetMaxOpenConns(1);if err:=migrate(db);err!=nil{return nil,fmt.Errorf("migrate: %w",err)};return &DB{db},nil}
+func migrate(db *sql.DB)error{_,err:=db.Exec(`CREATE TABLE IF NOT EXISTS collections(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL UNIQUE,description TEXT DEFAULT '',created_at DATETIME DEFAULT CURRENT_TIMESTAMP);CREATE TABLE IF NOT EXISTS assets(id INTEGER PRIMARY KEY AUTOINCREMENT,collection_id INTEGER NOT NULL,name TEXT NOT NULL,asset_type TEXT DEFAULT 'logo',format TEXT DEFAULT 'svg',url TEXT DEFAULT '',tags TEXT DEFAULT '',downloads INTEGER DEFAULT 0,created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`);return err}
+func(db *DB)ListCollections()([]Collection,error){rows,err:=db.Query(`SELECT c.id,c.name,c.description,COUNT(a.id),c.created_at FROM collections c LEFT JOIN assets a ON a.collection_id=c.id GROUP BY c.id ORDER BY c.name`);if err!=nil{return nil,err};defer rows.Close();var out[]Collection;for rows.Next(){var c Collection;rows.Scan(&c.ID,&c.Name,&c.Description,&c.AssetCount,&c.CreatedAt);out=append(out,c)};return out,nil}
+func(db *DB)CreateCollection(c *Collection)error{res,err:=db.Exec(`INSERT INTO collections(name,description)VALUES(?,?)`,c.Name,c.Description);if err!=nil{return err};c.ID,_=res.LastInsertId();return nil}
+func(db *DB)DeleteCollection(id int64)error{_,err:=db.Exec(`DELETE FROM collections WHERE id=?`,id);_,_=db.Exec(`DELETE FROM assets WHERE collection_id=?`,id);return err}
+func(db *DB)ListAssets(collectionID int64)([]Asset,error){var rows *sql.Rows;var err error;q:=`SELECT a.id,a.collection_id,COALESCE(c.name,''),a.name,a.asset_type,a.format,a.url,a.tags,a.downloads,a.created_at FROM assets a LEFT JOIN collections c ON c.id=a.collection_id`;if collectionID>0{rows,err=db.Query(q+` WHERE a.collection_id=? ORDER BY a.name`,collectionID)}else{rows,err=db.Query(q+` ORDER BY a.created_at DESC LIMIT 100`)};if err!=nil{return nil,err};defer rows.Close();var out[]Asset;for rows.Next(){var a Asset;rows.Scan(&a.ID,&a.CollectionID,&a.CollectionName,&a.Name,&a.AssetType,&a.Format,&a.URL,&a.Tags,&a.Downloads,&a.CreatedAt);out=append(out,a)};return out,nil}
+func(db *DB)CreateAsset(a *Asset)error{res,err:=db.Exec(`INSERT INTO assets(collection_id,name,asset_type,format,url,tags)VALUES(?,?,?,?,?,?)`,a.CollectionID,a.Name,a.AssetType,a.Format,a.URL,a.Tags);if err!=nil{return err};a.ID,_=res.LastInsertId();return nil}
+func(db *DB)DeleteAsset(id int64)error{_,err:=db.Exec(`DELETE FROM assets WHERE id=?`,id);return err}
+func(db *DB)IncrementDownload(id int64){db.Exec(`UPDATE assets SET downloads=downloads+1 WHERE id=?`,id)}
+func(db *DB)CountAssets()(int,error){var n int;db.QueryRow(`SELECT COUNT(*) FROM assets`).Scan(&n);return n,nil}
+func(db *DB)SumDownloads()(int,error){var n int;db.QueryRow(`SELECT COALESCE(SUM(downloads),0) FROM assets`).Scan(&n);return n,nil}
